@@ -1,0 +1,106 @@
+{
+  "flavors": [
+    {
+      "name": "t2.micro",
+      "memory": "1024",
+      "disk": "8",
+      "vcpu": "1"
+    },
+    {
+      "name": "t2.small",
+      "memory": "2048",
+      "disk": "8",
+      "vcpu": "1"
+    },
+    {
+      "name": "t2.medium",
+      "memory": "4096",
+      "disk": "8",
+      "vcpu": "2"
+    },
+    {
+      "name": "m3.medium",
+      "memory": "4096",
+      "disk": "8",
+      "vcpu": "1"
+    },
+    {
+      "name": "m3.large",
+      "memory": "8192",
+      "disk": "8",
+      "vcpu": "2"
+    },
+    {
+      "name": "m3.xlarge",
+      "memory": "16384",
+      "disk": "8",
+      "vcpu": "4"
+    },
+    {
+      "name": "m3.2xlarge",
+      "memory": "32768",
+      "disk": "8",
+      "vcpu": "8"
+    },
+    {
+      "name": "m3.3xlarge",
+      "memory": "32768",
+      "disk": "8",
+      "vcpu": "12"
+    },
+    {
+      "name": "m3.4xlarge",
+      "memory": "32768",
+      "disk": "8",
+      "vcpu": "16"
+    },
+    {
+      "name": "c4.large",
+      "memory": "4096",
+      "disk": "8",
+      "vcpu": "2"
+    },
+    {
+      "name": "c4.xlarge",
+      "memory": "8192",
+      "disk": "8",
+      "vcpu": "4"
+    },
+    {
+      "name": "c4.2xlarge",
+      "memory": "16384",
+      "disk": "8",
+      "vcpu": "8"
+    },
+    {
+      "name": "c3.large",
+      "memory": "4096",
+      "disk": "8",
+      "vcpu": "2"
+    },
+    {
+      "name": "c3.xlarge",
+      "memory": "8192",
+      "disk": "8",
+      "vcpu": "4"
+    },
+    {
+      "name": "c3.2xlarge",
+      "memory": "16384",
+      "disk": "8",
+      "vcpu": "8"
+    },
+    {
+      "name": "g2.2xlarge",
+      "memory": "16384",
+      "disk": "8",
+      "vcpu": "8"
+    },
+    {
+      "name": "r3.large",
+      "memory": "16384",
+      "disk": "8",
+      "vcpu": "2"
+    }
+  ]
+}
