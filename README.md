@@ -1,10 +1,17 @@
 README
 ======
-This tool is designed to create the core virtual cloud settings such as network setup, network rules, etc.
+This tool is designed to create the core virtual cloud settings such as network
+setup, network rules, etc.
 
-The OpenStack version is still a work-in-progress. The OpenStack scripts are still in flux because their python scripts are being deprecated in favor of an all-encompassing OpenStack common script (much like Amazon's AWS python script) instead of distinct projects. Ideally for our OpenStack scripts, we should import the libraries and call those functions instead of calling the distinct project scripts.
+The OpenStack version is still a work-in-progress. The OpenStack scripts are
+still in flux because their python scripts are being deprecated in favor of an
+all-encompassing OpenStack common script (much like Amazon's AWS python script)
+instead of distinct projects. Ideally for our OpenStack scripts, we should
+import the libraries and call those functions instead of calling the distinct
+project scripts.
 
-Much of the features in both AWS and OpenStack scripts are still not yet implemented.
+Much of the features in both AWS and OpenStack scripts are still not yet
+implemented.
 
 Network/Subnet
 --------------
@@ -18,8 +25,10 @@ where x is defined when you give it as an input at the command line.
 
 Flavor
 ------
-This is only for OpenStack if you have full admin control. This takes in a JSON file like:
+This is only for OpenStack if you have full admin control. This takes in a JSON
+file like:
 
+```
 {
   "flavors": [
     {
@@ -30,11 +39,13 @@ This is only for OpenStack if you have full admin control. This takes in a JSON 
     }
   ]
 }
+```
 
 Elastic Load Balancer
 ---------------------
 This takes in a JSON file like this:
 
+```
 {
   "LoadBalancers": [
   {
@@ -58,16 +69,22 @@ This takes in a JSON file like this:
     } ]
   } ]
 }
+```
 
 Security Groups/Network ACL
 ---------------------------
 This takes in YAML file like this:
 
+```
 subnets:
+  # Network
   network: &network "10.1.0.0/16"###
 
   ## Alias for subnet
   subnet-name: &subnet-name "10.1.0.0/24"
+
+acl-ids:
+  acl-name: &acl-name ""
 
 sec-groups:
   base:
@@ -82,3 +99,12 @@ sec-groups:
     tcp:
       inbound:
         22: ["base", "10.254.1.1/32"]
+
+# ACLs
+network-acls:
+  acl-name:
+    acl_id: *acl-name
+    tcp:
+      inbound:
+        - 22: *subnet-name
+```

@@ -2,14 +2,11 @@
 # Title         make_flavors.py
 # Description   Create flavors on OpenStack
 # Author        I-Ming Chen <imchen@red5studios.com>
-# Date          2015-05-13
-# Version       0.0.1   
+# Date          2015-07-26
+# Version       0.1.0   
 # Usage         ./make_flavors.py
-#               ./make_flavors.py --networkid vpc-123456 --flavorlist './path/to/json' --profile prod-sa-east-1 [--dryrun] [--verbose]
+#               ./make_flavors.py --flavorfile './path/to/json' [--dryrun] [--verbose]
 # Notes         Requires Python OpenStack CLI installed
-#               Many of the fields are still placeholders. I imagine network ID and profile to not be used because
-#               authentication is usually done with the OpenStackrc file. However, this may not be the case for
-#               automated system process. It may just require the user/pass, auth host, and tenant ID.
 #============================================================================        
 
 import sys
@@ -18,95 +15,92 @@ import subprocess
 import shlex
 import readline
 import json
-import re
 import time
 
-DRYRUN="0" #NYI
-CONFIRMATION="no"
-
 def parse_options():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--networkid", help="OpenStack Network ID", nargs='?')
-    parser.add_argument("--flavorlist", help="Flavor list (JSON)")
-    parser.add_argument("--profile", help="Profile", nargs='?')
-    parser.add_argument("--dryrun", help="Output without doing any real calls", action="store_true")
-    parser.add_argument("--verbose", help="Increase output verbosity", action="store_true")
+    parser = argparse.ArgumentParser(description="Create flavors on OpenStack")
+    parser.add_argument("-f", "--flavorfile", help="Flavor list (JSON)")
+    #parser.add_argument("--maxretry", help="Maximum retry attempts (default: 3)", default=3, type=int)
+    parser.add_argument("-d", "--dryrun", help="Output without doing any real calls", action="store_true")
+    #parser.add_argument("-V", "--verbose", help="Increase output verbosity", action="store_true")
     args = parser.parse_args()
     if args.dryrun:
-        print "Make Subnets: Dryrun Mode On"
-    if args.verbose:
-        print "Make Subnets: Verbose Mode On"
+        print "Dryrun Mode On"
+    #if args.verbose:
+    #    print "Verbose Mode On"
     return args
 
-def parse_flavor_list(json_file):
+
+def parseFlavorList(json_file):
     json_data = open(json_file)
     data = json.load(json_data)
     json_data.close()
     return data
 
+
+# For interactive mode
 def interactive(args):
-    global CONFIRMATION
-    args.networkid = raw_input("Enter network ID: ")
-    args.flavorlist = raw_input("Enter CIDR list (include path): ")
-    args.profile = raw_input("Enter CLI profile name: ")
-    flavor_list = parse_flavor_list(args.flavorlist)
-    for flavor in flavor_list.keys():
-        #TODO: Make this work for interactive
-        #TODO: Consider listing all prior flavors and asking if we want to clear them
-        print flavor
-        #print flavor['name']
-        #print flavor['memory']
-        #print flavor['disk']
-        #print flavor['vcpu']
-        #cidr = re.sub('[x]', args.cidrblock, cidr)
-        #print "aws ec2 create-subnet --vpc-id %s --availability-zone %s --cidr-block %s --profile %s" % (args.networkid, args.zone, cidr, args.profile)
-    CONFIRMATION = raw_input("Is this what you want to build? [YES/NO] ")
+    args.flavorfile = raw_input("Enter CIDR list (include path): ")
+    args.flavorlist = parseFlavorList(args.flavorfile)
+    print "-----------------------------------------------"
+    print "| Name       | Memory (MB) | vCPU | Disk (GB) |"
+    for key,flavors in args.flavorlist.items():
+        for flavor in flavors:
+            print "-----------------------------------------------"
+            print "| " + flavor['name'].ljust(10) + " | " + flavor['memory'].rjust(11) + " | " \
+                  + flavor['vcpu'].rjust(4) + " | " + flavor['disk'].rjust(9) + " |"
+    print "-----------------------------------------------"
+    args.confirm = raw_input("Is this what you want to build? [Yes/No] ").lower()
+    if args.confirm == "no":
+        sys.exit(0)
+    #TODO: List flavors we are overwriting (query nova)
+    #TODO: Confirm we want to replace existing flavors 
+
+
+# Determine if OpenStack Nova installed
+def programCheck():
+    prog_check = subprocess.call(['which', 'nova'])
+    if prog_check == 0:
+        print "nova installation detected..."
+    else:
+        print "nova not found!"
+        sys.exit(1)
+
+
+# The heart of the program
+def createFlavors(args):
+    print "Creating server flavors..."
+    for key,flavors in args.flavorlist.items():
+        for flavor in flavors:
+            # Ex: nova flavor-create c3.large auto 4096 16 2
+            print "nova flavor-create %s auto %s %s %s" % (flavor['name'], flavor['memory'], flavor['disk'], flavor['vcpu'])
+            command = "nova flavor-create %s auto %s %s %s" % (flavor['name'], flavor['memory'], flavor['disk'], flavor['vcpu'])
+            if args.dryrun != True:
+                process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
+                #output = process.communicate()[0]
+                #TODO: Capture output. Retry again if failure. Retry X times.
+    print "Done creating flavors!"
+
 
 def main(args):
-    # Detector not debugged yet
-    # Determine if we have python-openstack installed
+    programCheck()
 
-    print "### OpenStack Server Flavor Creator! ###"
-    global CONFIRMATION
-
-    # Check if interactive version or otherwise
-    if not args.profile:
-        interactive()
-    else:
-        CONFIRMATION="YES"
-
+    # If non-interactive, flavorlist not parsed yet so we read it now
     try:
-        flavor_list
-    except NameError:
-        flavor_list = parse_flavor_list(args.flavorlist)
+        args.flavorlist
+    except AttributeError:
+        args.flavorlist = parseFlavorList(args.flavorfile)
 
-    if (CONFIRMATION == "YES" or CONFIRMATION == "yes" or CONFIRMATION == "Y" or CONFIRMATION == "y"):
-        print "Creating server flavors"
-        #TODO: Consider listing all prior flavors and asking if we want to clear them
-        for key,flavors in flavor_list.items():
-            for flavor in flavors:
-                # Ex: nova flavor-create c3.large auto 4096 16 2
-                print "nova flavor-create %s auto %s %s %s" % (flavor['name'], flavor['memory'], flavor['disk'], flavor['vcpu'])
-                command = "nova flavor-create %s auto %s %s %s" % (flavor['name'], flavor['memory'], flavor['disk'], flavor['vcpu'])
-                process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-                #output = process.communicate()[0] # Optional output
-                #TODO: Capture output. Retry again if failure. Retry X times.
-        print "### Done creating stuff! ###"
-        return
-    else:
-        print "### Okay, canceling. ###"
-        sys.exit(1) # Exiting
+    createFlavors(args)
+
 
 if __name__ == '__main__':
     args = parse_options()
-    print args
 
+    # Enable interactive mode
     if len(sys.argv) == 1:
-        main(args)
-    elif len(sys.argv) == 7:
-        main(args)
-    else:
-        print "ERROR: Wrong number of arguments."
-        sys.exit(1)
+        interactive(args)
 
+    main(args)
     sys.exit()
+
